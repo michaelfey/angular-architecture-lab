@@ -1,0 +1,49 @@
+:root {
+  color-scheme: light;
+  --page-ink: #142235;
+  --page-soft-ink: #556579;
+  --page-line: rgba(20, 34, 53, 0.12);
+  --page-panel: rgba(255, 255, 255, 0.74);
+  --page-panel-strong: rgba(255, 255, 255, 0.9);
+  --page-accent: #0f7b6c;
+  --page-accent-strong: #0a5a4f;
+  --page-accent-soft: rgba(15, 123, 108, 0.12);
+  --page-secondary: #ef7f45;
+  --page-danger: #bb4f3f;
+  --page-shadow: 0 24px 70px rgba(38, 61, 87, 0.16);
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  color: var(--page-ink);
+  font-family: "Avenir Next", "Trebuchet MS", sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(255, 210, 140, 0.42), transparent 28%),
+    radial-gradient(circle at 85% 12%, rgba(89, 180, 165, 0.26), transparent 24%),
+    linear-gradient(180deg, #f6f2e8 0%, #edf2f7 40%, #e3edf4 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}

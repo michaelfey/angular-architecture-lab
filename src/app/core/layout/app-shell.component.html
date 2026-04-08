@@ -1,0 +1,46 @@
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" routerLink="/workshops">
+      <span class="brand-mark">AL</span>
+      <span>
+        <strong>Angular Architecture Lab</strong>
+        <small>Feature boundaries, facades, and RxJS orchestration</small>
+      </span>
+    </a>
+
+    <nav class="nav">
+      <a routerLink="/workshops" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: false }">
+        Workshop Catalog
+      </a>
+      <a routerLink="/enrollment-effects" routerLinkActive="active">Enrollment Effects</a>
+      <a routerLink="/optimistic-updates" routerLinkActive="active">Optimistic Updates</a>
+      <a routerLink="/patterns" routerLinkActive="active">Pattern Notes</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Learning by tracing real code</p>
+      <h1>Build Angular systems that stay understandable as they grow.</h1>
+      <p class="intro">
+        This app demonstrates route-level providers, repository and facade boundaries, reactive forms,
+        and stream-based view models. Use it as a lab: read the flow, change the rules, then verify how
+        the behavior moves through the feature.
+      </p>
+    </div>
+
+    <div class="hero-panel">
+      <p>Suggested first trace</p>
+      <ol>
+        <li>`app.routes.ts`</li>
+        <li>`workshops.routes.ts`</li>
+        <li>`workshops.repository.ts`</li>
+        <li>`workshops.facade.ts`</li>
+      </ol>
+    </div>
+  </section>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

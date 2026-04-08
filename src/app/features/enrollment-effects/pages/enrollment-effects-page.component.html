@@ -1,0 +1,76 @@
+@if (vm$ | async; as vm) {
+  <section class="intro">
+    <div>
+      <p class="eyebrow">Separate command streams</p>
+      <h2>Each user intent triggers its own API workflow.</h2>
+      <p>
+        This feature splits search, refresh, and enrollment toggles into separate subjects because each
+        one needs different RxJS behavior before the reducer sees the result events.
+      </p>
+    </div>
+
+    <aside class="rules">
+      <strong>Flow</strong>
+      <ul>
+        <li>`queryChanged$$` debounces and uses `switchMap`.</li>
+        <li>`refreshRequested$$` replays the current query.</li>
+        <li>`toggleEnrollmentRequested$$` queues writes with `concatMap`.</li>
+      </ul>
+    </aside>
+  </section>
+
+  <section class="controls">
+    <label>
+      Search sessions
+      <input [formControl]="query" placeholder="Try 'rxjs', 'testing', or a coach name" />
+    </label>
+
+    <div class="actions">
+      <button type="button" (click)="facade.refresh()">Refresh results</button>
+    </div>
+  </section>
+
+  <section class="summary-grid">
+    <article>
+      <strong>{{ vm.sessions.length }}</strong>
+      <span>Visible sessions</span>
+    </article>
+    <article>
+      <strong>{{ vm.enrolledCount }}</strong>
+      <span>Enrolled sessions</span>
+    </article>
+    <article>
+      <strong>{{ vm.availableSeats }}</strong>
+      <span>Seats left</span>
+    </article>
+  </section>
+
+  @if (vm.activeRequestLabel) {
+    <p class="banner">{{ vm.activeRequestLabel }}</p>
+  }
+
+  @if (vm.error) {
+    <p class="banner error">{{ vm.error }}</p>
+  }
+
+  @if (vm.loading) {
+    <p class="banner">A search request is in flight. Previous results stay rendered until the API responds.</p>
+  }
+
+  @if (vm.isEmpty) {
+    <section class="empty">
+      <h3>No sessions match the current query.</h3>
+      <p>Try a broader term or hit refresh to rerun the last search.</p>
+    </section>
+  } @else {
+    <section class="results">
+      @for (session of vm.sessions; track session.id) {
+        <app-enrollment-session-card
+          [session]="session"
+          [pending]="vm.pendingIds.includes(session.id)"
+          (toggleRequested)="facade.toggleEnrollment($event)"
+        />
+      }
+    </section>
+  }
+}

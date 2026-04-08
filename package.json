@@ -1,0 +1,39 @@
+{
+  "name": "angular-architecture-lab",
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "ng": "ng",
+    "start": "node scripts/dev.js",
+    "start:client": "ng serve --proxy-config proxy.conf.cjs",
+    "start:api": "node server/index.js",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "vitest run --globals --environment=node"
+  },
+  "private": true,
+  "packageManager": "npm@11.10.0",
+  "dependencies": {
+    "@angular/common": "^21.2.0",
+    "@angular/compiler": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "express": "^5.2.1",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zone.js": "^0.15.1"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^21.2.6",
+    "@angular/build": "^21.2.3",
+    "@angular/cli": "^21.2.3",
+    "@angular/compiler-cli": "^21.2.0",
+    "jsdom": "^28.0.0",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.8"
+  }
+}

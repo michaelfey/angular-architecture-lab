@@ -1,0 +1,104 @@
+@if (vm$ | async; as vm) {
+  <section class="controls">
+    <form class="filters" [formGroup]="filters">
+      <label>
+        Search
+        <input formControlName="query" placeholder="Try 'rxjs', 'cache', or 'route'" />
+      </label>
+
+      <label>
+        Track
+        <select formControlName="track">
+          <option value="all">All tracks</option>
+          <option value="architecture">Architecture</option>
+          <option value="rxjs">RxJS</option>
+          <option value="testing">Testing</option>
+          <option value="performance">Performance</option>
+        </select>
+      </label>
+
+      <label>
+        Difficulty
+        <select formControlName="difficulty">
+          <option value="all">All levels</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+      </label>
+
+      <label>
+        Sort
+        <select formControlName="sort">
+          <option value="featured">Featured</option>
+          <option value="duration">Duration</option>
+          <option value="difficulty">Difficulty</option>
+        </select>
+      </label>
+
+      <label class="toggle">
+        <input type="checkbox" formControlName="showSavedOnly" />
+        Saved only
+      </label>
+    </form>
+
+    <div class="actions">
+      <button type="button" (click)="facade.refresh()">Refresh catalog</button>
+      <button type="button" class="ghost" (click)="resetFilters()" [disabled]="!vm.hasActiveFilters">
+        Reset filters
+      </button>
+    </div>
+  </section>
+
+  <section class="summary-grid">
+    <article>
+      <strong>{{ vm.visibleCount }}</strong>
+      <span>Visible lessons</span>
+    </article>
+    <article>
+      <strong>{{ vm.savedIds.length }}</strong>
+      <span>Saved lessons</span>
+    </article>
+    <article>
+      <strong>{{ vm.loading ? 'Loading' : 'Ready' }}</strong>
+      <span>Repository snapshot</span>
+    </article>
+  </section>
+
+  <section class="track-strip">
+    @for (track of vm.trackSummary; track track.track) {
+      <article>
+        <strong>{{ track.track }}</strong>
+        <span>{{ track.total }} total</span>
+        <span>{{ track.saved }} saved</span>
+      </article>
+    }
+  </section>
+
+  @if (vm.error) {
+    <p class="banner error">{{ vm.error }}</p>
+  }
+
+  @if (vm.loading) {
+    <p class="banner">Refreshing catalog while keeping the previous snapshot visible.</p>
+  }
+
+  @if (vm.visibleWorkshops.length) {
+    <section class="results">
+      @for (workshop of vm.visibleWorkshops; track workshop.id) {
+        <app-workshop-card
+          [workshop]="workshop"
+          [saved]="vm.savedIds.includes(workshop.id)"
+          (saveToggled)="facade.toggleSaved($event)"
+        />
+      }
+    </section>
+  } @else {
+    <section class="empty">
+      <h2>No workshop matches the current filters.</h2>
+      <p>
+        Reset the form to watch the facade rebuild the view model, or inspect
+        <a routerLink="/patterns">Pattern Notes</a> before adding a new filter.
+      </p>
+    </section>
+  }
+}

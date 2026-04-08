@@ -1,0 +1,156 @@
+.shell {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.25rem 0 3rem;
+}
+
+.topbar,
+.hero,
+.content > * {
+  animation: rise 420ms ease-out both;
+}
+
+.topbar {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  border: 1px solid var(--page-line);
+  border-radius: 28px;
+  background: var(--page-panel);
+  backdrop-filter: blur(18px);
+  box-shadow: var(--page-shadow);
+}
+
+.brand {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.brand strong,
+.hero h1 {
+  font-family: "Georgia", "Times New Roman", serif;
+  font-weight: 700;
+}
+
+.brand small {
+  display: block;
+  color: var(--page-soft-ink);
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.9rem;
+  aspect-ratio: 1;
+  border-radius: 18px;
+  color: white;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, var(--page-secondary), var(--page-accent));
+}
+
+.nav {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.nav a {
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  color: var(--page-soft-ink);
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.nav a:hover,
+.nav a.active {
+  color: var(--page-ink);
+  background: rgba(255, 255, 255, 0.88);
+  transform: translateY(-1px);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 1.25rem;
+  margin: 1.3rem 0 1.5rem;
+}
+
+.hero > div,
+.hero-panel {
+  padding: 1.6rem;
+  border: 1px solid var(--page-line);
+  border-radius: 30px;
+  background: var(--page-panel);
+  box-shadow: var(--page-shadow);
+}
+
+.eyebrow,
+.hero-panel p {
+  margin: 0 0 0.8rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--page-accent-strong);
+}
+
+.hero h1 {
+  margin: 0 0 0.8rem;
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  line-height: 0.96;
+}
+
+.intro {
+  max-width: 62ch;
+  margin: 0;
+  color: var(--page-soft-ink);
+  line-height: 1.7;
+}
+
+.hero-panel ol {
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--page-soft-ink);
+  line-height: 1.8;
+}
+
+.content {
+  display: block;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 860px) {
+  .topbar,
+  .hero {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .nav {
+    justify-content: space-between;
+  }
+
+  .nav a {
+    flex: 1 1 0;
+    text-align: center;
+  }
+}

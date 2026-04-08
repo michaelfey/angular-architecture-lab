@@ -1,0 +1,69 @@
+@if (vm$ | async; as vm) {
+  @if (vm.error) {
+    <p class="banner error">{{ vm.error }}</p>
+  }
+
+  @if (vm.loading) {
+    <p class="banner">The repository is refreshing. Detail data will settle as soon as the new snapshot arrives.</p>
+  }
+
+  @if (vm.workshop; as workshop) {
+    <article class="detail-card">
+      <a class="back-link" routerLink="/workshops">Back to catalog</a>
+
+      <div class="headline">
+        <div>
+          <p class="eyebrow">{{ workshop.track }} track</p>
+          <h2>{{ workshop.title }}</h2>
+          <p class="summary">{{ workshop.summary }}</p>
+        </div>
+
+        <aside>
+          <strong>{{ workshop.durationHours }}h</strong>
+          <span>{{ workshop.cohortSize }} seats per cohort</span>
+          <span>{{ workshop.difficulty }}</span>
+        </aside>
+      </div>
+
+      <section class="columns">
+        <div>
+          <h3>Architecture outcomes</h3>
+          <ul>
+            @for (outcome of workshop.outcomes; track outcome) {
+              <li>{{ outcome }}</li>
+            }
+          </ul>
+        </div>
+
+        <div>
+          <h3>RxJS focus</h3>
+          <ul>
+            @for (focus of workshop.rxjsFocus; track focus) {
+              <li>{{ focus }}</li>
+            }
+          </ul>
+        </div>
+      </section>
+    </article>
+
+    @if (vm.recommendations.length) {
+      <section class="recommendations">
+        <h3>More from the same track</h3>
+        <div class="recommendation-grid">
+          @for (recommendation of vm.recommendations; track recommendation.id) {
+            <a [routerLink]="['/workshops', recommendation.id]">
+              <strong>{{ recommendation.title }}</strong>
+              <span>{{ recommendation.summary }}</span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+  } @else {
+    <section class="empty">
+      <h2>That workshop was not found.</h2>
+      <p>The detail page composes route params with repository data. Try returning to the catalog.</p>
+      <a routerLink="/workshops">Return to catalog</a>
+    </section>
+  }
+}

@@ -1,0 +1,144 @@
+.controls,
+.summary-grid article,
+.track-strip article,
+.empty,
+.banner {
+  border: 1px solid var(--page-line);
+  background: var(--page-panel);
+  box-shadow: var(--page-shadow);
+}
+
+.controls {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+  border-radius: 28px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 2fr repeat(3, minmax(0, 1fr)) auto;
+  gap: 0.9rem;
+}
+
+.filters label {
+  display: grid;
+  gap: 0.45rem;
+  color: var(--page-soft-ink);
+  font-size: 0.92rem;
+}
+
+.filters input,
+.filters select {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(20, 34, 53, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.toggle {
+  display: flex;
+  gap: 0.7rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.toggle input {
+  width: auto;
+}
+
+.actions,
+.summary-grid,
+.track-strip,
+.results {
+  display: grid;
+  gap: 1rem;
+}
+
+.actions {
+  grid-template-columns: repeat(2, max-content);
+}
+
+.actions button {
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 999px;
+  color: white;
+  background: linear-gradient(135deg, var(--page-secondary), var(--page-accent));
+}
+
+.actions .ghost {
+  color: var(--page-ink);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.summary-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 1.2rem 0;
+}
+
+.summary-grid article,
+.track-strip article,
+.empty,
+.banner {
+  border-radius: 24px;
+}
+
+.summary-grid article,
+.track-strip article {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1.15rem;
+}
+
+.summary-grid strong,
+.track-strip strong {
+  font-size: 1.15rem;
+}
+
+.summary-grid span,
+.track-strip span,
+.empty p,
+.banner {
+  color: var(--page-soft-ink);
+}
+
+.track-strip {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 1.2rem;
+}
+
+.results {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.banner,
+.empty {
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.banner.error {
+  color: var(--page-danger);
+}
+
+.empty h2 {
+  margin-top: 0;
+}
+
+@media (max-width: 960px) {
+  .filters,
+  .summary-grid,
+  .track-strip,
+  .results {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    grid-template-columns: 1fr;
+  }
+}
