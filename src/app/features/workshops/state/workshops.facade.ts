@@ -1,5 +1,11 @@
-import { inject, Injectable } from '@angular/core';
-import { Observable, Subject, combineLatest, map, merge, scan, shareReplay } from 'rxjs';
+import {
+  computed,
+  inject,
+  Injectable,
+  Signal,
+  signal
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   TrackSummary,
   Workshop,
@@ -8,14 +14,17 @@ import {
   WorkshopSort,
   WorkshopTrack,
   WorkshopTrackFilter,
-  WorkshopsRepositorySnapshot,
   WorkshopsState,
   WorkshopsVm
 } from '../domain/workshop.models';
-import { WorkshopsRepository } from '../data-access/workshops.repository';
+import { INITIAL_SNAPSHOT, WorkshopsRepository } from '../data-access/workshops.repository';
+
+type LocalState = Pick<
+  WorkshopsState,
+  'query' | 'track' | 'difficulty' | 'sort' | 'showSavedOnly' | 'savedIds'
+>;
 
 type StateMutation =
-  | { readonly type: 'repositoryChanged'; readonly snapshot: WorkshopsRepositorySnapshot }
   | { readonly type: 'queryChanged'; readonly query: string }
   | {
       readonly type: 'filtersChanged';
@@ -27,10 +36,7 @@ type StateMutation =
   | { readonly type: 'savedToggled'; readonly workshopId: string }
   | { readonly type: 'filtersReset' };
 
-const INITIAL_STATE: WorkshopsState = {
-  loading: false,
-  error: null,
-  workshops: [],
+const INITIAL_LOCAL_STATE: LocalState = {
   query: '',
   track: 'all',
   difficulty: 'all',
@@ -39,52 +45,54 @@ const INITIAL_STATE: WorkshopsState = {
   savedIds: []
 };
 
+export const INITIAL_STATE: WorkshopsState = {
+  ...INITIAL_SNAPSHOT,
+  ...INITIAL_LOCAL_STATE
+};
+
 @Injectable()
 export class WorkshopsFacade {
   private readonly repository = inject(WorkshopsRepository);
-  private readonly mutations$$ = new Subject<StateMutation>();
+  private readonly repositorySnapshot = toSignal(this.repository.snapshot$, {
+    initialValue: INITIAL_SNAPSHOT
+  });
+  private readonly stateSource = signal<LocalState>(INITIAL_LOCAL_STATE);
 
-  readonly state$: Observable<WorkshopsState> = merge(
-    this.repository.snapshot$.pipe(map((snapshot): StateMutation => ({ type: 'repositoryChanged', snapshot }))),
-    this.mutations$$
-  ).pipe(
-    scan((state, mutation) => reduceState(state, mutation), INITIAL_STATE),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
+  readonly state = computed<WorkshopsState>(() => ({
+    ...this.repositorySnapshot(),
+    ...this.stateSource()
+  }));
+  readonly vm = computed<WorkshopsVm>(() => {
+    const state = this.state();
+    const visibleWorkshops = selectVisibleWorkshops(state);
 
-  readonly vm$: Observable<WorkshopsVm> = this.state$.pipe(
-    map((state) => {
-      const visibleWorkshops = selectVisibleWorkshops(state);
-
-      return {
-        ...state,
-        visibleWorkshops,
-        visibleCount: visibleWorkshops.length,
-        hasActiveFilters:
-          state.query.length > 0 ||
-          state.track !== 'all' ||
-          state.difficulty !== 'all' ||
-          state.sort !== 'featured' ||
-          state.showSavedOnly,
-        trackSummary: buildTrackSummary(state.workshops, state.savedIds)
-      };
-    }),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
+    return {
+      ...state,
+      visibleWorkshops,
+      visibleCount: visibleWorkshops.length,
+      hasActiveFilters:
+        state.query.length > 0 ||
+        state.track !== 'all' ||
+        state.difficulty !== 'all' ||
+        state.sort !== 'featured' ||
+        state.showSavedOnly,
+      trackSummary: buildTrackSummary(state.workshops, state.savedIds)
+    };
+  });
 
   refresh(): void {
     this.repository.refresh();
   }
 
   setQuery(query: string): void {
-    this.mutations$$.next({
+    this.applyMutation({
       type: 'queryChanged',
       query: query.trim()
     });
   }
 
   setFilters(track: WorkshopTrackFilter, difficulty: WorkshopDifficultyFilter, sort: WorkshopSort): void {
-    this.mutations$$.next({
+    this.applyMutation({
       type: 'filtersChanged',
       track,
       difficulty,
@@ -93,62 +101,57 @@ export class WorkshopsFacade {
   }
 
   setSavedOnly(showSavedOnly: boolean): void {
-    this.mutations$$.next({
+    this.applyMutation({
       type: 'savedOnlyChanged',
       showSavedOnly
     });
   }
 
   toggleSaved(workshopId: string): void {
-    this.mutations$$.next({
+    this.applyMutation({
       type: 'savedToggled',
       workshopId
     });
   }
 
   resetFilters(): void {
-    this.mutations$$.next({
+    this.applyMutation({
       type: 'filtersReset'
     });
   }
 
-  createDetailVm(workshopId$: Observable<string>): Observable<WorkshopDetailVm> {
-    return combineLatest([this.state$, workshopId$]).pipe(
-      map(([state, workshopId]) => {
-        const workshop = state.workshops.find((candidate) => candidate.id === workshopId) ?? null;
-        const recommendations = workshop
-          ? state.workshops
-              .filter((candidate) => candidate.id !== workshop.id && candidate.track === workshop.track)
-              .slice(0, 3)
-          : [];
+  createDetailVm(workshopId: Signal<string>): Signal<WorkshopDetailVm> {
+    return computed(() => {
+      const state = this.state();
+      const currentWorkshopId = workshopId();
+      const workshop = state.workshops.find((candidate) => candidate.id === currentWorkshopId) ?? null;
+      const recommendations = workshop
+        ? state.workshops
+            .filter((candidate) => candidate.id !== workshop.id && candidate.track === workshop.track)
+            .slice(0, 3)
+        : [];
 
-        return {
-          loading: state.loading,
-          error: state.error,
-          workshop,
-          recommendations
-        };
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
+      return {
+        loading: state.loading,
+        error: state.error,
+        workshop,
+        recommendations
+      };
+    });
+  }
+
+  private applyMutation(mutation: StateMutation): void {
+    this.stateSource.update((state) => reduceState(state, mutation));
   }
 }
 
-function reduceState(state: WorkshopsState, mutation: StateMutation): WorkshopsState {
+export function reduceState<TState extends LocalState>(state: TState, mutation: StateMutation): TState {
   switch (mutation.type) {
-    case 'repositoryChanged':
-      return {
-        ...state,
-        loading: mutation.snapshot.loading,
-        error: mutation.snapshot.error,
-        workshops: mutation.snapshot.workshops
-      };
-
     case 'queryChanged':
       return {
         ...state,
         query: mutation.query
-      };
+      } as TState;
 
     case 'filtersChanged':
       return {
@@ -156,13 +159,13 @@ function reduceState(state: WorkshopsState, mutation: StateMutation): WorkshopsS
         track: mutation.track,
         difficulty: mutation.difficulty,
         sort: mutation.sort
-      };
+      } as TState;
 
     case 'savedOnlyChanged':
       return {
         ...state,
         showSavedOnly: mutation.showSavedOnly
-      };
+      } as TState;
 
     case 'savedToggled':
       return {
@@ -170,7 +173,7 @@ function reduceState(state: WorkshopsState, mutation: StateMutation): WorkshopsS
         savedIds: state.savedIds.includes(mutation.workshopId)
           ? state.savedIds.filter((savedId) => savedId !== mutation.workshopId)
           : [...state.savedIds, mutation.workshopId]
-      };
+      } as TState;
 
     case 'filtersReset':
       return {
@@ -180,11 +183,11 @@ function reduceState(state: WorkshopsState, mutation: StateMutation): WorkshopsS
         difficulty: 'all',
         sort: 'featured',
         showSavedOnly: false
-      };
+      } as TState;
   }
 }
 
-function selectVisibleWorkshops(state: WorkshopsState): readonly Workshop[] {
+export function selectVisibleWorkshops(state: WorkshopsState): readonly Workshop[] {
   const normalizedQuery = state.query.toLowerCase();
   const filtered = state.workshops.filter((workshop) => {
     const matchesQuery =
@@ -238,11 +241,3 @@ function buildTrackSummary(
     };
   });
 }
-
-export {
-  INITIAL_STATE,
-  buildTrackSummary,
-  compareWorkshops,
-  reduceState,
-  selectVisibleWorkshops
-};

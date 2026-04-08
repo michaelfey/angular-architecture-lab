@@ -1,4 +1,3 @@
-import { AsyncPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -33,14 +32,14 @@ const DEFAULT_FILTERS: {
 @Component({
   selector: 'app-catalog-page',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, RouterLink, WorkshopCardComponent],
+  imports: [ReactiveFormsModule, RouterLink, WorkshopCardComponent],
   templateUrl: './catalog-page.component.html',
   styleUrl: './catalog-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CatalogPageComponent {
   readonly facade = inject(WorkshopsFacade);
-  readonly vm$ = this.facade.vm$;
+  readonly vm = this.facade.vm;
 
   readonly filters: FiltersForm = new FormGroup({
     query: new FormControl(DEFAULT_FILTERS.query, { nonNullable: true }),

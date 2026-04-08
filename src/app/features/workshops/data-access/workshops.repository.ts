@@ -8,7 +8,7 @@ type RepositoryEvent =
   | { readonly type: 'loaded'; readonly workshops: WorkshopsRepositorySnapshot['workshops'] }
   | { readonly type: 'failed'; readonly message: string };
 
-const INITIAL_SNAPSHOT: WorkshopsRepositorySnapshot = {
+export const INITIAL_SNAPSHOT: WorkshopsRepositorySnapshot = {
   loading: false,
   error: null,
   workshops: []

@@ -27,6 +27,27 @@ By default the API runs on `3001`. To override it for both the server and Angula
 API_PORT=3100 npm start
 ```
 
+## Angular MCP
+
+This repo includes project-local Angular CLI MCP configuration for editors that support checked-in
+MCP files:
+
+- Cursor: `.cursor/mcp.json`
+- VS Code: `.vscode/mcp.json`
+
+Both use Angular's official CLI MCP server:
+
+```json
+{
+  "command": "npx",
+  "args": ["-y", "@angular/cli", "mcp"]
+}
+```
+
+If you use IntelliJ IDEA or WebStorm, Angular documents JetBrains MCP setup under
+`Settings | Tools | AI Assistant | Model Context Protocol (MCP)`. Add a server there with the
+same `npx -y @angular/cli mcp` command.
+
 ## Build It
 
 ```bash

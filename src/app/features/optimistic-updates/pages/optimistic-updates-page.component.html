@@ -1,4 +1,9 @@
 @if (vm$ | async; as vm) {
+  @let labs = vm.labs;
+  @let pendingIds = vm.pendingIds;
+  @let rolledBackIds = vm.rolledBackIds;
+  @let statusMessage = vm.statusMessage ?? 'Waiting for the first server snapshot.';
+
   <section class="intro">
     <div>
       <p class="eyebrow">Optimistic writes</p>
@@ -23,7 +28,7 @@
   <section class="controls">
     <div class="status-copy">
       <strong>What the facade is doing</strong>
-      <p>{{ vm.statusMessage ?? 'Waiting for the first server snapshot.' }}</p>
+      <p>{{ statusMessage }}</p>
     </div>
 
     <div class="actions">
@@ -55,11 +60,11 @@
   }
 
   <section class="results">
-    @for (lab of vm.labs; track lab.id) {
+    @for (lab of labs; track lab.id) {
       <app-optimistic-lab-card
         [lab]="lab"
-        [pending]="vm.pendingIds.includes(lab.id)"
-        [rolledBack]="vm.rolledBackIds.includes(lab.id)"
+        [pending]="pendingIds.includes(lab.id)"
+        [rolledBack]="rolledBackIds.includes(lab.id)"
         (reservationToggled)="facade.toggleReservation($event)"
       />
     }

@@ -1,4 +1,7 @@
 @if (vm$ | async; as vm) {
+  @let sessions = vm.sessions;
+  @let pendingIds = vm.pendingIds;
+
   <section class="intro">
     <div>
       <p class="eyebrow">Separate command streams</p>
@@ -32,7 +35,7 @@
 
   <section class="summary-grid">
     <article>
-      <strong>{{ vm.sessions.length }}</strong>
+      <strong>{{ sessions.length }}</strong>
       <span>Visible sessions</span>
     </article>
     <article>
@@ -64,10 +67,10 @@
     </section>
   } @else {
     <section class="results">
-      @for (session of vm.sessions; track session.id) {
+      @for (session of sessions; track session.id) {
         <app-enrollment-session-card
           [session]="session"
-          [pending]="vm.pendingIds.includes(session.id)"
+          [pending]="pendingIds.includes(session.id)"
           (toggleRequested)="facade.toggleEnrollment($event)"
         />
       }
