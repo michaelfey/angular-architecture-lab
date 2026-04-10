@@ -1,72 +1,71 @@
-@if (vm$ | async; as vm) {
-  @let labs = vm.labs;
-  @let pendingIds = vm.pendingIds;
-  @let rolledBackIds = vm.rolledBackIds;
-  @let statusMessage = vm.statusMessage ?? 'Waiting for the first server snapshot.';
+@let model = vm();
+@let labs = model.labs;
+@let pendingIds = model.pendingIds;
+@let rolledBackIds = model.rolledBackIds;
+@let statusMessage = model.statusMessage ?? 'Waiting for the first server snapshot.';
 
-  <section class="intro">
-    <div>
-      <p class="eyebrow">Optimistic writes</p>
-      <h2>Patch first, confirm later, rollback if the server disagrees.</h2>
-      <p>
-        Reserving a seat updates the local snapshot immediately so the UI feels instant. The facade then
-        waits for the authoritative response and either keeps the optimistic state or restores the
-        previous lab if the write fails.
-      </p>
-    </div>
+<section class="intro">
+  <div>
+    <p class="eyebrow">Optimistic writes</p>
+    <h2>Patch first, confirm later, rollback if the server disagrees.</h2>
+    <p>
+      Reserving a seat updates the local snapshot immediately so the UI feels instant. The facade then
+      waits for the authoritative response and either keeps the optimistic state or restores the
+      previous lab if the write fails.
+    </p>
+  </div>
 
-    <aside class="rules">
-      <strong>Try this trace</strong>
-      <ul>
-        <li>Reserve a seat in `Concurrency Clinic` to watch an optimistic patch roll back.</li>
-        <li>Reserve a seat in another lab to see the server confirm the optimistic write.</li>
-        <li>Hit refresh to reload the authoritative snapshot.</li>
-      </ul>
-    </aside>
-  </section>
+  <aside class="rules">
+    <strong>Try this trace</strong>
+    <ul>
+      <li>Reserve a seat in `Concurrency Clinic` to watch an optimistic patch roll back.</li>
+      <li>Reserve a seat in another lab to see the server confirm the optimistic write.</li>
+      <li>Hit refresh to reload the authoritative snapshot.</li>
+    </ul>
+  </aside>
+</section>
 
-  <section class="controls">
-    <div class="status-copy">
-      <strong>What the facade is doing</strong>
-      <p>{{ statusMessage }}</p>
-    </div>
+<section class="controls">
+  <div class="status-copy">
+    <strong>What the facade is doing</strong>
+    <p>{{ statusMessage }}</p>
+  </div>
 
-    <div class="actions">
-      <button type="button" (click)="facade.refresh()">Refresh server snapshot</button>
-    </div>
-  </section>
+  <div class="actions">
+    <button type="button" (click)="facade.refresh()">Refresh server snapshot</button>
+  </div>
+</section>
 
-  <section class="summary-grid">
-    <article>
-      <strong>{{ vm.joinedCount }}</strong>
-      <span>Joined labs</span>
-    </article>
-    <article>
-      <strong>{{ vm.pendingCount }}</strong>
-      <span>Pending writes</span>
-    </article>
-    <article>
-      <strong>{{ vm.availableSeats }}</strong>
-      <span>Open seats</span>
-    </article>
-  </section>
+<section class="summary-grid">
+  <article>
+    <strong>{{ model.joinedCount }}</strong>
+    <span>Joined labs</span>
+  </article>
+  <article>
+    <strong>{{ model.pendingCount }}</strong>
+    <span>Pending writes</span>
+  </article>
+  <article>
+    <strong>{{ model.availableSeats }}</strong>
+    <span>Open seats</span>
+  </article>
+</section>
 
-  @if (vm.error) {
-    <p class="banner error">{{ vm.error }}</p>
-  }
-
-  @if (vm.loading) {
-    <p class="banner">Refreshing the server snapshot while keeping the current labs visible.</p>
-  }
-
-  <section class="results">
-    @for (lab of labs; track lab.id) {
-      <app-optimistic-lab-card
-        [lab]="lab"
-        [pending]="pendingIds.includes(lab.id)"
-        [rolledBack]="rolledBackIds.includes(lab.id)"
-        (reservationToggled)="facade.toggleReservation($event)"
-      />
-    }
-  </section>
+@if (model.error) {
+  <p class="banner error">{{ model.error }}</p>
 }
+
+@if (model.loading) {
+  <p class="banner">Refreshing the server snapshot while keeping the current labs visible.</p>
+}
+
+<section class="results">
+  @for (lab of labs; track lab.id) {
+    <app-optimistic-lab-card
+      [lab]="lab"
+      [pending]="pendingIds.includes(lab.id)"
+      [rolledBack]="rolledBackIds.includes(lab.id)"
+      (reservationToggled)="facade.toggleReservation($event)"
+    />
+  }
+</section>

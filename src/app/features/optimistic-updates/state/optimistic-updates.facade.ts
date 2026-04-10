@@ -1,6 +1,6 @@
-import { inject, Injectable } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  BehaviorSubject,
   Observable,
   ReplaySubject,
   Subject,
@@ -10,11 +10,7 @@ import {
   map,
   merge,
   of,
-  scan,
-  shareReplay,
-  switchMap,
-  tap,
-  withLatestFrom
+  switchMap
 } from 'rxjs';
 import { OptimisticUpdatesApiService } from '../data-access/optimistic-updates-api.service';
 import {
@@ -85,14 +81,38 @@ export const INITIAL_STATE: OptimisticUpdatesState = {
 @Injectable()
 export class OptimisticUpdatesFacade {
   private readonly api = inject(OptimisticUpdatesApiService);
-  private readonly refreshRequested$$ = new ReplaySubject<LabsRefreshRequested>(1);
+  private readonly refreshRequested$$ = new ReplaySubject<void>(1);
   private readonly reservationToggleRequested$$ = new Subject<ReservationToggleRequested>();
-  private readonly latestLabs$$ = new BehaviorSubject<readonly OptimisticLab[]>(INITIAL_STATE.labs);
+  private readonly stateSource = signal<OptimisticUpdatesState>(INITIAL_STATE);
+
+  readonly state = this.stateSource.asReadonly();
+  readonly vm = computed<OptimisticUpdatesVm>(() => {
+    const state = this.state();
+
+    return {
+      ...state,
+      joinedCount: state.labs.filter((lab) => lab.joined).length,
+      pendingCount: state.pendingIds.length,
+      availableSeats: state.labs.reduce(
+        (total, lab) => total + Math.max(lab.capacity - lab.reservedSeats, 0),
+        0
+      )
+    };
+  });
+
+  constructor() {
+    merge(this.loadEvents$, this.reservationEvents$)
+      .pipe(takeUntilDestroyed())
+      .subscribe((event) => {
+        this.stateSource.update((state) => reduceState(state, event));
+      });
+
+    this.refresh();
+  }
 
   private readonly loadEvents$: Observable<OptimisticUpdatesEvent> = this.refreshRequested$$.pipe(
-    switchMap((action) =>
+    switchMap(() =>
       concat(
-        of<OptimisticUpdatesEvent>(action),
         of<OptimisticUpdatesEvent>({ type: 'labsLoadStarted' }),
         this.api.loadLabs().pipe(
           map(
@@ -114,9 +134,8 @@ export class OptimisticUpdatesFacade {
 
   private readonly reservationEvents$: Observable<OptimisticUpdatesEvent> =
     this.reservationToggleRequested$$.pipe(
-      withLatestFrom(this.latestLabs$$),
-      concatMap(([action, labs]) => {
-        const previousLab = labs.find((lab) => lab.id === action.labId);
+      concatMap((action) => {
+        const previousLab = this.stateSource().labs.find((lab) => lab.id === action.labId);
 
         if (!previousLab) {
           return of<OptimisticUpdatesEvent>({
@@ -153,38 +172,13 @@ export class OptimisticUpdatesFacade {
       })
     );
 
-  private readonly stateEvents$: Observable<OptimisticUpdatesEvent> = merge(
-    this.loadEvents$,
-    this.reservationEvents$
-  );
-
-  readonly state$: Observable<OptimisticUpdatesState> = this.stateEvents$.pipe(
-    scan((state, event) => reduceState(state, event), INITIAL_STATE),
-    tap((state) => this.latestLabs$$.next(state.labs)),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
-
-  readonly vm$: Observable<OptimisticUpdatesVm> = this.state$.pipe(
-    map((state) => ({
-      ...state,
-      joinedCount: state.labs.filter((lab) => lab.joined).length,
-      pendingCount: state.pendingIds.length,
-      availableSeats: state.labs.reduce(
-        (total, lab) => total + Math.max(lab.capacity - lab.reservedSeats, 0),
-        0
-      )
-    })),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
-
-  constructor() {
-    this.refresh();
-  }
-
   refresh(): void {
-    this.refreshRequested$$.next({
-      type: 'labsRefreshRequested'
-    });
+    this.stateSource.update((state) =>
+      reduceState(state, {
+        type: 'labsRefreshRequested'
+      })
+    );
+    this.refreshRequested$$.next();
   }
 
   toggleReservation(labId: string): void {
