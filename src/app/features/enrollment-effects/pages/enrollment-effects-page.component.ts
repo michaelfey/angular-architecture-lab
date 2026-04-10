@@ -1,4 +1,3 @@
-import { AsyncPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -8,14 +7,14 @@ import { EnrollmentSessionCardComponent } from '../ui/enrollment-session-card.co
 @Component({
   selector: 'app-enrollment-effects-page',
   standalone: true,
-  imports: [AsyncPipe, ReactiveFormsModule, EnrollmentSessionCardComponent],
+  imports: [ReactiveFormsModule, EnrollmentSessionCardComponent],
   templateUrl: './enrollment-effects-page.component.html',
   styleUrl: './enrollment-effects-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class EnrollmentEffectsPageComponent {
   readonly facade = inject(EnrollmentFacade);
-  readonly vm$ = this.facade.vm$;
+  readonly vm = this.facade.vm;
   readonly query = new FormControl('', { nonNullable: true });
 
   constructor() {

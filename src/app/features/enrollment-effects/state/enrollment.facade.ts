@@ -1,6 +1,6 @@
-import { inject, Injectable } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
-  BehaviorSubject,
   Observable,
   ReplaySubject,
   Subject,
@@ -12,10 +12,7 @@ import {
   map,
   merge,
   of,
-  scan,
-  shareReplay,
-  switchMap,
-  withLatestFrom
+  switchMap
 } from 'rxjs';
 import { EnrollmentApiService } from '../data-access/enrollment-api.service';
 import { EnrollmentSession, EnrollmentState, EnrollmentVm } from '../domain/enrollment.models';
@@ -23,15 +20,6 @@ import { EnrollmentSession, EnrollmentState, EnrollmentVm } from '../domain/enro
 type QueryChanged = {
   readonly type: 'queryChanged';
   readonly query: string;
-};
-
-type RefreshRequested = {
-  readonly type: 'refreshRequested';
-};
-
-type ToggleEnrollmentRequested = {
-  readonly type: 'toggleEnrollmentRequested';
-  readonly sessionId: string;
 };
 
 type SearchStarted = {
@@ -69,8 +57,6 @@ type ToggleFailed = {
 
 type EnrollmentEvent =
   | QueryChanged
-  | RefreshRequested
-  | ToggleEnrollmentRequested
   | SearchStarted
   | SearchSucceeded
   | SearchFailed
@@ -89,54 +75,16 @@ export const INITIAL_STATE: EnrollmentState = {
 
 @Injectable()
 export class EnrollmentFacade {
-  private readonly api = inject(EnrollmentApiService);
-  private readonly queryChanged$$ = new ReplaySubject<QueryChanged>(1);
-  private readonly refreshRequested$$ = new Subject<RefreshRequested>();
-  private readonly toggleEnrollmentRequested$$ = new Subject<ToggleEnrollmentRequested>();
-  private readonly latestQuery$$ = new BehaviorSubject(INITIAL_STATE.query);
+  private readonly queryChanged$$ = new ReplaySubject<string>(1);
+  private readonly refreshRequested$$ = new Subject<void>();
+  private readonly toggleEnrollmentRequested$$ = new Subject<string>();
+  private readonly stateSource = signal<EnrollmentState>(INITIAL_STATE);
 
-  private readonly queryEvents$: Observable<EnrollmentEvent> = merge(
-    this.queryChanged$$,
-    this.queryChanged$$.pipe(
-      map((action) => action.query),
-      debounceTime(220),
-      distinctUntilChanged(),
-      switchMap((query) => this.searchSessions(query, 'queryChanged'))
-    )
-  );
+  readonly state = this.stateSource.asReadonly();
+  readonly vm = computed<EnrollmentVm>(() => {
+    const state = this.state();
 
-  private readonly refreshEvents$: Observable<EnrollmentEvent> = this.refreshRequested$$.pipe(
-    withLatestFrom(this.latestQuery$$),
-    switchMap(([action, query]) =>
-      concat(
-        of<EnrollmentEvent>(action),
-        this.searchSessions(query, 'refreshRequested')
-      )
-    )
-  );
-
-  private readonly toggleEvents$: Observable<EnrollmentEvent> = this.toggleEnrollmentRequested$$.pipe(
-    concatMap((action) =>
-      concat(
-        of<EnrollmentEvent>(action),
-        this.runToggleEnrollment(action.sessionId)
-      )
-    )
-  );
-
-  private readonly stateEvents$: Observable<EnrollmentEvent> = merge(
-    this.queryEvents$,
-    this.refreshEvents$,
-    this.toggleEvents$
-  );
-
-  readonly state$: Observable<EnrollmentState> = this.stateEvents$.pipe(
-    scan((state, event) => reduceState(state, event), INITIAL_STATE),
-    shareReplay({ bufferSize: 1, refCount: true })
-  );
-
-  readonly vm$: Observable<EnrollmentVm> = this.state$.pipe(
-    map((state) => ({
+    return {
       ...state,
       enrolledCount: state.sessions.filter((session) => session.isEnrolled).length,
       availableSeats: state.sessions.reduce(
@@ -144,38 +92,51 @@ export class EnrollmentFacade {
         0
       ),
       isEmpty: state.sessions.length === 0 && !state.loading && !state.error
-    })),
-    shareReplay({ bufferSize: 1, refCount: true })
+    };
+  });
+
+  constructor(private readonly api: EnrollmentApiService) {
+    merge(this.queryEvents$, this.refreshEvents$, this.toggleEvents$)
+      .pipe(takeUntilDestroyed())
+      .subscribe((event) => {
+        this.stateSource.update((state) => reduceState(state, event));
+      });
+
+    this.queryChanged$$.next(INITIAL_STATE.query);
+  }
+
+  private readonly queryEvents$: Observable<EnrollmentEvent> = this.queryChanged$$.pipe(
+    debounceTime(220),
+    distinctUntilChanged(),
+    switchMap((query) => this.searchSessions(query, 'queryChanged'))
   );
 
-  constructor() {
-    this.queryChanged$$.next({
-      type: 'queryChanged',
-      query: INITIAL_STATE.query
-    });
-  }
+  private readonly refreshEvents$: Observable<EnrollmentEvent> = this.refreshRequested$$.pipe(
+    switchMap(() => this.searchSessions(this.stateSource().query, 'refreshRequested'))
+  );
+
+  private readonly toggleEvents$: Observable<EnrollmentEvent> = this.toggleEnrollmentRequested$$.pipe(
+    concatMap((sessionId) => this.runToggleEnrollment(sessionId))
+  );
 
   setQuery(query: string): void {
     const normalizedQuery = query.trim();
 
-    this.latestQuery$$.next(normalizedQuery);
-    this.queryChanged$$.next({
-      type: 'queryChanged',
-      query: normalizedQuery
-    });
+    this.stateSource.update((state) =>
+      reduceState(state, {
+        type: 'queryChanged',
+        query: normalizedQuery
+      })
+    );
+    this.queryChanged$$.next(normalizedQuery);
   }
 
   refresh(): void {
-    this.refreshRequested$$.next({
-      type: 'refreshRequested'
-    });
+    this.refreshRequested$$.next();
   }
 
   toggleEnrollment(sessionId: string): void {
-    this.toggleEnrollmentRequested$$.next({
-      type: 'toggleEnrollmentRequested',
-      sessionId
-    });
+    this.toggleEnrollmentRequested$$.next(sessionId);
   }
 
   private searchSessions(
@@ -238,10 +199,6 @@ export function reduceState(state: EnrollmentState, event: EnrollmentEvent): Enr
         ...state,
         query: event.query
       };
-
-    case 'refreshRequested':
-    case 'toggleEnrollmentRequested':
-      return state;
 
     case 'searchStarted':
       return {
