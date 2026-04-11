@@ -1,0 +1,4 @@
+interface:
+  display_name: "Angular Best Practices"
+  short_description: "Angular 21+ standards with examples"
+  default_prompt: "Use $angular-best-practices to generate, refactor, or review Angular code with current best practices and concrete examples."
