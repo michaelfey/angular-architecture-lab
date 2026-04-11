@@ -60,6 +60,7 @@ The production output is written to `dist/angular-architecture-lab`.
 
 - `src/app/core/layout`: app shell and top-level navigation
 - `src/app/features/workshops`: the main learning feature with facade, repository, routes, and UI components
+- `src/app/features/dashboard-composition`: a composed dashboard that merges three repository snapshots into one route-level view model
 - `src/app/features/enrollment-effects`: a feature that models separate intent streams, API effects, and reducer events
 - `src/app/features/optimistic-updates`: a feature that demonstrates optimistic writes, server confirmation, and rollback
 - `src/app/features/patterns`: a second feature page that explains the architecture decisions
@@ -85,7 +86,6 @@ The production output is written to `dist/angular-architecture-lab`.
 These are good candidates for separate features so the repo can keep teaching one architectural pressure at a time.
 
 - `draft-editor`: local component state vs facade state vs persisted state, plus autosave, dirty tracking, and navigation guards.
-- `dashboard-composition`: composing multiple repositories or facades into one page-level view model.
 - `polling-and-staleness`: refresh intervals, stale banners, cache age, and background revalidation.
 - `master-detail-selection`: URL state vs UI selection state vs feature state.
 - `wizard-flow`: multi-step route-scoped state, validation, progress, and resumable drafts.
@@ -96,7 +96,6 @@ These are good candidates for separate features so the repo can keep teaching on
 
 Suggested next order:
 
-1. `dashboard-composition`
-2. `draft-editor`
-3. `polling-and-staleness`
-4. `master-detail-selection`
+1. `draft-editor`
+2. `polling-and-staleness`
+3. `master-detail-selection`

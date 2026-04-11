@@ -1,0 +1,148 @@
+<section class="page">
+  <article class="intro">
+    <div>
+      <p class="eyebrow">Dashboard Composition</p>
+      <h2>Compose multiple repositories into one page-level view model.</h2>
+      <p>
+        This feature keeps workshop, enrollment, and optimistic reservation snapshots independent, then
+        derives one dashboard view model at the route boundary. The page composes data instead of making
+        one source pretend to own everything.
+      </p>
+    </div>
+
+    <div class="controls">
+      <label>
+        <span>Track focus</span>
+        <select [formControl]="track">
+          <option value="all">All tracks</option>
+          <option value="architecture">Architecture</option>
+          <option value="rxjs">RxJS</option>
+          <option value="testing">Testing</option>
+          <option value="performance">Performance</option>
+        </select>
+      </label>
+
+      <label class="checkbox">
+        <input type="checkbox" [formControl]="showAttentionOnly" />
+        <span>Show only items that need attention</span>
+      </label>
+
+      <button type="button" (click)="facade.refreshAll()">Refresh all sources</button>
+    </div>
+  </article>
+
+  @if (vm().errors.length) {
+    <section class="errors">
+      @for (message of vm().errors; track message) {
+        <p>{{ message }}</p>
+      }
+    </section>
+  }
+
+  <section class="metrics">
+    @for (metric of vm().metrics; track metric.label) {
+      <article class="metric-card">
+        <p class="metric-label">{{ metric.label }}</p>
+        <strong>{{ metric.value }}</strong>
+        <small>{{ metric.detail }}</small>
+      </article>
+    }
+  </section>
+
+  <section class="track-grid">
+    @for (summary of vm().trackSummary; track summary.track) {
+      <article class="track-card" [class.active]="summary.isActive">
+        <h3>{{ summary.track }}</h3>
+        <p>{{ summary.workshopCount }} workshops</p>
+        <p>{{ summary.enrolledCount }} enrolled sessions</p>
+        <p>{{ summary.joinedCount }} joined labs</p>
+        <small>{{ summary.openSeats }} open seats across live activities</small>
+      </article>
+    }
+  </section>
+
+  <section class="content-grid">
+    <article class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Featured Workshops</p>
+          <h3>Page-level priorities from the catalog slice</h3>
+        </div>
+        @if (vm().loading) {
+          <span class="status">Refreshing</span>
+        }
+      </div>
+
+      @if (vm().emptySections.workshops) {
+        <p class="empty">No workshops match the current dashboard filters.</p>
+      } @else {
+        <div class="stack">
+          @for (workshop of vm().featuredWorkshops; track workshop.id) {
+            <article class="item-card">
+              <div class="item-topline">
+                <span>{{ workshop.track }}</span>
+                <span>{{ workshop.intensityLabel }}</span>
+              </div>
+              <h4>{{ workshop.title }}</h4>
+              <p>{{ workshop.summary }}</p>
+            </article>
+          }
+        </div>
+      }
+    </article>
+
+    <article class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Enrollment Pressure</p>
+          <h3>Sessions merged into one operational queue</h3>
+        </div>
+      </div>
+
+      @if (vm().emptySections.sessions) {
+        <p class="empty">No sessions match the current dashboard filters.</p>
+      } @else {
+        <div class="stack">
+          @for (session of vm().sessions; track session.id) {
+            <article class="item-card" [class.attention]="session.needsAttention">
+              <div class="item-topline">
+                <span>{{ session.track }}</span>
+                <span>{{ session.dayLabel }} {{ session.startTime }}</span>
+              </div>
+              <h4>{{ session.title }}</h4>
+              <p>{{ session.coach }}</p>
+              <small>{{ session.statusLabel }}</small>
+            </article>
+          }
+        </div>
+      }
+    </article>
+
+    <article class="panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">Optimistic Labs</p>
+          <h3>Low-seat reservations stay visible beside the rest</h3>
+        </div>
+      </div>
+
+      @if (vm().emptySections.labs) {
+        <p class="empty">No labs match the current dashboard filters.</p>
+      } @else {
+        <div class="stack">
+          @for (lab of vm().labs; track lab.id) {
+            <article class="item-card" [class.attention]="lab.needsAttention">
+              <div class="item-topline">
+                <span>{{ lab.track }}</span>
+                <span>{{ lab.coach }}</span>
+              </div>
+              <h4>{{ lab.title }}</h4>
+              <p>{{ lab.summary }}</p>
+              <small>{{ lab.statusLabel }}</small>
+            </article>
+          }
+        </div>
+      }
+    </article>
+  </section>
+</section>

@@ -121,6 +121,11 @@ export class PatternsPageComponent {
       fileAnchor: 'src/app/features/optimistic-updates/state/optimistic-updates.facade.ts'
     },
     {
+      title: 'Page-Level Dashboard Composition',
+      reason: 'The dashboard composition feature keeps each repository independent, then merges their snapshots into one route-scoped view model without creating a fake global owner.',
+      fileAnchor: 'src/app/features/dashboard-composition/state/dashboard-composition.facade.ts'
+    },
+    {
       title: 'Reactive Forms as Event Streams',
       reason: 'The catalog page treats form controls as observables, debounces them, and forwards intent instead of storing business state locally.',
       fileAnchor: 'src/app/features/workshops/pages/catalog-page.component.ts'

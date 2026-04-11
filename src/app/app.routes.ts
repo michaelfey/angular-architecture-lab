@@ -7,6 +7,13 @@ export const routes: Routes = [
     redirectTo: 'workshops'
   },
   {
+    path: 'dashboard-composition',
+    loadChildren: () =>
+      import('./features/dashboard-composition/dashboard-composition.routes').then(
+        (module) => module.DASHBOARD_COMPOSITION_ROUTES
+      )
+  },
+  {
     path: 'enrollment-effects',
     loadChildren: () =>
       import('./features/enrollment-effects/enrollment-effects.routes').then(
