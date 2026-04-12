@@ -2,9 +2,16 @@
 
 Use this project as a sequence of small investigations rather than trying to understand every file at once.
 
+This learning path assumes you already know Angular fundamentals. The goal here is not to learn Angular from scratch, but to study stronger architectural boundaries, state modeling choices, and best-practice tradeoffs in a realistic codebase.
+
 ## Step 1: Trace the boundaries
 
-Read these files in order:
+Start with these docs first:
+
+1. `README.md` visual architecture section
+2. `docs/pattern-tradeoffs.md`
+
+Then read these files in order:
 
 1. `src/app/app.routes.ts`
 2. `src/app/features/workshops/workshops.routes.ts`
@@ -16,6 +23,7 @@ Questions to answer:
 - Which dependencies are app-wide and which are feature-local?
 - Why does the repository expose a snapshot instead of raw loading streams and data streams separately?
 - Which state belongs to the facade and which state belongs to the form?
+- Which of these patterns are solving a real problem here, and which would be overkill in a smaller feature?
 
 ## Step 2: Understand the RxJS flow
 
@@ -49,7 +57,9 @@ Then try a second exercise:
 
 ## Step 4: Refactor with intent
 
-After you understand the current implementation, try one of these:
+After you understand the current implementation, use `docs/pattern-tradeoffs.md` to argue for or against a change before you code it.
+
+Then try one of these:
 
 - Replace the facade reducer stream with `ComponentStore` and compare the ergonomics.
 - Replace the mock API with `HttpClient`.
